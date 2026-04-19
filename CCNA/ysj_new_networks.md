@@ -2,13 +2,16 @@
 
 > (찾아봤을 때) 실제 작동되고 있는 것들만 설명한다. 이전의 지식인 경우 크게 설명하지 않거나 이전임을 설명하고 넘어간다.
 
-# TCP/IP와 실제 컴퓨터의 동작 넓게 알아보기
+# 네트워크 넓게 알아보기
 
-대충 실제 동작 확인할거면 OSI 보다는 TCP/IP에 집중하라는 내용.
+## 들어가며
 
-OSI 모델은 실제 장비를 한 계층으로 고정해서 분류하기보다, 네트워크 기능과 프로토콜을 나눠 보는 개념 모델에 가깝다. 실제 통신에서는 상위 데이터가 하위 프로토콜에 계속 감싸인다. 예를 들어 HTTP 메시지는 TCP segment 안에, TCP는 IP packet 안에, IP는 Ethernet frame 안에 들어간다. 이걸 **encapsulation**이라고 부른다.
+[네트워크는 추상 모델(OSI)보다 실제 동작하는 프로토콜(TCP/IP, HTTP)과 소켓 같은 구현 관점에서 이해해야 한다.](https://www.youtube.com/watch?v=k1gyh9BlOT8&list=PLXvgR_grOs1BFH-TuqFsfHqbh-gpMbFoy)
 
-https://www.youtube.com/watch?v=k1gyh9BlOT8&list=PLXvgR_grOs1BFH-TuqFsfHqbh-gpMbFoy&index=1
+### OSI 7 Layers / TCP/IP Model
+
+OSI 모델은 과거의 여러 개가 묶여었을 때 나와야하는거라, 지금은 너무 넒은 개념임. TCP/IP 모델을 배우는게 더 나음.
+
 
 ```
                OSI 7 Layers                TCP/IP Model
@@ -29,7 +32,7 @@ https://www.youtube.com/watch?v=k1gyh9BlOT8&list=PLXvgR_grOs1BFH-TuqFsfHqbh-gpMb
         +--------------------------+    +------------------+
 ```
 
-크게 어떤 식으로 동작하는지에 대한 개념(물론 예외도 있지만)
+TCP/IP의 실제 동작에 대해서 그러보면 다음과 같다.
 
 ```
        ^             +----------------------------------+
@@ -55,17 +58,18 @@ https://www.youtube.com/watch?v=k1gyh9BlOT8&list=PLXvgR_grOs1BFH-TuqFsfHqbh-gpMb
                      +----------------------------------+
 ```
 
-## 상위 구분 기준
+### 목차 소개
 
-이 문서는 OSI 계층을 그대로 목차로 쓰기보다 **관찰자의 위치와 책임 범위**를 기준으로 나눈다.
+이 문서는 **관찰자의 위치와 책임 범위**를 기준으로 목차를 나눈다.
 
 - **Part 1. 네트워크 장비와 전달 경로**: frame/packet이 실제 장비와 링크를 지나 목적지 방향으로 이동하는 흐름
 - **Part 2. 프로토콜 규칙과 메시지 의미**: Ethernet/IP/TCP/UDP/HTTP 같은 프로토콜이 어떤 필드와 규칙으로 동작하는지
 - **Part 3. Host OS / 커널 / 표준 API**: NIC driver, kernel network stack, socket API처럼 OS가 네트워크 기능을 제공하는 방식
-- **Part 4. 유저 레벨 도구와 사용 흐름**: `ping`, `ss`, `curl`, browser devtools처럼 사람이 확인하고 사용하는 관점
-- **Part 5. 기타**: 여러 계층이 섞이거나, 아직 어느 파트에 둘지 애매한 현대 네트워크 주제
+  - 이 글의 대부분은 Linux 환경을 기반으로 한다.
+- **Part 4. 유저 레벨 도구와 사용 흐름**: `ping`, `ss`, `curl`, browser devtools처럼 User Level에서 확인하고 사용하는 관점
+- **Part 5. 기타**: 아직 애매하지만 정리해둔 내용
 
-따라서 MAC, IP, TCP 같은 개념이 여러 Part에 다시 나올 수 있다. 중복이라기보다 **인프라 관점 / 프로토콜 관점 / OS 구현 관점 / 사용자 관점**이 다르기 때문이다.
+따라서 동일한 같은 개념이 여러 Part에 다시 나올 수 있다. 
 
 # Part 1. 네트워크 장비와 전달 경로
 
@@ -76,7 +80,7 @@ OSI 7계층 중 1계층. 이산적 디지털 데이터(0/1)를 연속적 물리 
 상위 계층(Data Link)에서 내려온 비트 스트림을 물리 신호로 인코딩하고, 수신 측에서 복원 가능하도록 전기적·기계적·절차적 표준을 규정한다.
 
 L1은 "비트를 어떻게 신호로 바꿔 매체에 실을 것인가"만 다룬다.    
-단, 실제 NIC에서는 L2의 MAC 블록과 L1의 PHY 블록이 붙어서 동작하므로 경계가 깔끔하게 보이지 않을 수 있다.
+(단, 실제 NIC에서는 L2의 MAC 블록과 L1의 PHY 블록이 붙어서 동작하므로 경계가 깔끔하게 보이지 않는다. TCP/IP Model에서는 L1/L2를 Link Layer 하나로 봐서 그럴지도)
 
 - **MAC**: 이더넷 프레임, MAC 주소 필터링, FCS/CRC, 송수신 큐 같은 L2 동작을 담당
 - **PHY**: MAC에서 받은 비트/심볼을 전기·빛·전파 신호로 바꾸고, 반대로 매체에서 들어온 신호를 다시 복원
